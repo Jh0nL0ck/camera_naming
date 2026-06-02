@@ -1,24 +1,18 @@
 # XProtect Camera Renamer
 
-Local Node tool to rename Milestone XProtect cameras through the XProtect API Gateway.
+Local Node tool for bulk renaming Milestone XProtect cameras through the XProtect API Gateway.
 
-Designed for XProtect 2023 R3 or newer, where API Gateway is expected to be available. The tool detects common IDP and Configuration API routes before authentication.
+This tool is intended for systems with many cameras, where renaming each camera manually from XProtect Management Client can become slow and repetitive. It lets an operator connect to the VMS, load the configured camera list, select specific cameras or all visible cameras, define a naming pattern, preview the generated names, validate duplicates, and only then apply the changes in bulk.
 
-## Tested route candidates
+The naming pattern can combine fixed text, site/building/floor/zone fields, the current camera name, camera ID, and an incremental counter. Before applying anything to XProtect, the UI shows the generated names so the operator can adjust the pattern safely.
 
-- IDP discovery:
-  - `/API/IDP/.well-known/openid-configuration`
-  - `/api/idp/.well-known/openid-configuration`
-  - `/IDP/.well-known/openid-configuration`
-  - `/idp/.well-known/openid-configuration`
-- Token:
-  - `/API/IDP/connect/token`
-  - `/api/idp/connect/token`
-  - `/IDP/connect/token`
-  - `/idp/connect/token`
-- Configuration API:
-  - `/api/rest/v1`
-  - `/API/rest/v1`
+## Requirements
+
+- Node.js 18 or newer.
+- Milestone XProtect 2023 R3 or newer.
+- XProtect API Gateway enabled and reachable from the machine running this tool.
+- A VMS user with permissions to read cameras and update camera configuration.
+- Network access from the tool machine to the XProtect API Gateway.
 
 ## Usage
 
