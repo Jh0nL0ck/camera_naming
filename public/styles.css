@@ -340,17 +340,17 @@ td.new-name {
   display: grid;
   grid-template-columns: minmax(260px, 1fr) minmax(260px, 360px);
   gap: 14px;
+  align-items: start;
 }
 
 .pattern-stack {
   display: grid;
   gap: 10px;
+  align-content: start;
 }
 
-.pattern-fields {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(120px, 180px);
-  gap: 10px;
+.pattern-stack label {
+  align-content: start;
 }
 
 .sample-grid {
@@ -456,8 +456,7 @@ tr.row-warning td {
   }
 
   .builder-grid,
-  .sample-grid,
-  .pattern-fields {
+  .sample-grid {
     grid-template-columns: 1fr;
   }
 
