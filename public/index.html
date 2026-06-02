@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>XProtect Camera Renamer</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="app">
+      <section class="panel connection">
+        <div>
+          <h1>XProtect Camera Renamer</h1>
+          <p>Connect to the API Gateway, review cameras, preview names, and apply confirmed changes.</p>
+        </div>
+        <form id="connectForm" class="grid-form">
+          <label>
+            Server
+            <input name="server" placeholder="https://vms-server" required>
+          </label>
+          <label>
+            Username
+            <input name="username" autocomplete="username" placeholder="user or DOMAIN\\user" required>
+          </label>
+          <label>
+            Password
+            <input name="password" type="password" autocomplete="current-password" required>
+          </label>
+          <label>
+            Client ID
+            <input name="clientId" value="GrantValidatorClient">
+          </label>
+          <label>
+            Auth
+            <select name="authMode">
+              <option value="password">Basic/password</option>
+              <option value="windows_credentials">Windows credentials</option>
+            </select>
+          </label>
+          <label class="check">
+            <input name="allowInsecure" type="checkbox" checked>
+            Allow internal/self-signed certificate
+          </label>
+          <div class="actions">
+            <button type="button" id="probeButton">Detect routes</button>
+            <button type="submit">Connect</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="status-row">
+        <div id="status" class="status">Not connected.</div>
+        <div id="routeInfo" class="route-info"></div>
+      </section>
+
+      <section class="workspace">
+        <aside class="panel tools">
+          <h2>Naming</h2>
+          <label>
+            Pattern
+            <input id="pattern" value="{prefix}-{index:000}" placeholder="{prefix}-{index:000}">
+          </label>
+          <label>
+            Prefix
+            <input id="prefix" value="CAM">
+          </label>
+          <label>
+            Start index
+            <input id="startIndex" type="number" value="1" min="0">
+          </label>
+          <label>
+            Filter
+            <input id="filter" placeholder="Search by name or ID">
+          </label>
+          <div class="actions stacked">
+            <button id="loadCameras" type="button">Load cameras</button>
+            <button id="selectVisible" type="button">Select visible</button>
+            <button id="clearSelection" type="button">Clear selection</button>
+            <button id="preview" type="button">Preview</button>
+          </div>
+          <div class="legend">
+            Variables: <code>{site}</code>, <code>{building}</code>, <code>{floor}</code>, <code>{zone}</code>, <code>{prefix}</code>, <code>{index}</code>
+          </div>
+        </aside>
+
+        <section class="panel table-panel">
+          <div class="table-head">
+            <h2>Cameras</h2>
+            <div id="selectionCount">0 selected</div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>Current name</th>
+                  <th>New name</th>
+                  <th>ID</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="cameraRows"></tbody>
+            </table>
+          </div>
+          <div class="confirm-row">
+            <label class="check">
+              <input id="confirmApply" type="checkbox">
+              I confirm that I want to apply these names in XProtect
+            </label>
+            <button id="apply" type="button" disabled>Apply changes</button>
+          </div>
+
+          <section class="naming-preview">
+            <div class="preview-head">
+              <div>
+                <h2>Naming preview</h2>
+                <p>Try pattern combinations here before applying them to selected cameras.</p>
+              </div>
+              <button id="helpButton" class="icon-button" type="button" aria-label="Show naming examples" title="Show naming examples">?</button>
+            </div>
+            <div id="helpBox" class="help-box" hidden>
+              <strong>Examples</strong>
+              <ul>
+                <li><code>{prefix}-{index:000}</code> -> <code>CAM-001</code>, <code>CAM-002</code></li>
+                <li><code>{site}-{building}-{floor}-{zone}-{prefix}-{index:000}</code> -> <code>MAD-B01-F02-ENT-CAM-001</code></li>
+                <li><code>{prefix}-{oldName}</code> -> keeps the current camera name as part of the new name.</li>
+                <li><code>HQ-F1-{index:00}</code> -> <code>HQ-F1-01</code>, <code>HQ-F1-02</code></li>
+                <li><code>{prefix}-{id}-{index:000}</code> -> includes the camera ID when needed for uniqueness.</li>
+              </ul>
+            </div>
+            <div class="builder-grid">
+              <label>
+                Preset
+                <select id="preset">
+                  <option value="">Custom</option>
+                  <option value="{site}-{building}-{floor}-{zone}-{prefix}-{index:000}">Site-Building-Floor-Zone-CAM-001</option>
+                  <option value="{site}-{zone}-{index:000}">Site-Zone-001</option>
+                  <option value="{floor}-{zone}-{prefix}-{index:000}">Floor-Zone-CAM-001</option>
+                  <option value="{prefix}-{index:000}">CAM-001</option>
+                  <option value="{oldName}-{index:000}">CurrentName-001</option>
+                </select>
+              </label>
+              <label>
+                Separator
+                <select id="separator">
+                  <option value="-">Dash (-)</option>
+                  <option value="_">Underscore (_)</option>
+                  <option value=" ">Space</option>
+                </select>
+              </label>
+              <div class="token-row" aria-label="Pattern builder tokens">
+                <button type="button" data-token="{site}">Site</button>
+                <button type="button" data-token="{building}">Building</button>
+                <button type="button" data-token="{floor}">Floor</button>
+                <button type="button" data-token="{zone}">Zone</button>
+                <button type="button" data-token="{prefix}">Prefix</button>
+                <button type="button" data-token="{index:000}">Counter</button>
+                <button type="button" data-token="{oldName}">Current name</button>
+                <button type="button" data-token="{id}">ID</button>
+              </div>
+            </div>
+            <div class="preview-editor">
+              <label>
+                Pattern
+                <textarea id="widePattern" rows="3" spellcheck="false">{prefix}-{index:000}</textarea>
+              </label>
+              <div class="sample-grid">
+                <label>
+                  Site
+                  <input id="site" value="MAD">
+                </label>
+                <label>
+                  Building
+                  <input id="building" value="B01">
+                </label>
+                <label>
+                  Floor
+                  <input id="floor" value="F02">
+                </label>
+                <label>
+                  Zone
+                  <input id="zone" value="ENT">
+                </label>
+                <label>
+                  Sample old name
+                  <input id="sampleOldName" value="Entrance camera">
+                </label>
+                <label>
+                  Sample ID
+                  <input id="sampleId" value="camera-id">
+                </label>
+                <label>
+                  Sample count
+                  <input id="sampleCount" type="number" min="1" max="12" value="5">
+                </label>
+              </div>
+            </div>
+            <div id="widePreview" class="wide-preview"></div>
+            <div id="validationSummary" class="validation-summary">No previewed changes yet.</div>
+          </section>
+        </section>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
