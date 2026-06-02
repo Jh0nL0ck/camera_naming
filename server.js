@@ -337,14 +337,115 @@ async function listCameras(session) {
     page += 1;
   }
 
-  return all.map((camera) => ({
-    id: camera.id || camera.objectId || camera.path || camera.url || "",
-    name: camera.name || camera.displayName || "",
-    enabled: camera.enabled ?? camera.isEnabled ?? null,
-    description: camera.description || "",
-    parentId: camera.parentId || camera.hardwareId || "",
-    raw: camera
-  }));
+  const groupMap = await getCameraGroupMap(session);
+
+  return all.map((camera) => {
+    const id = camera.id || camera.objectId || camera.path || camera.url || "";
+    const normalizedId = extractIdFromPath(id);
+    const groups = groupMap.groupsByCameraId.get(String(id)) || groupMap.groupsByCameraId.get(normalizedId) || [];
+    return {
+      id,
+      name: camera.name || camera.displayName || "",
+      enabled: camera.enabled ?? camera.isEnabled ?? null,
+      description: camera.description || "",
+      parentId: camera.parentId || camera.hardwareId || "",
+      group: summarizeCameraGroups(groups),
+      groups,
+      groupLookupStatus: groupMap.status,
+      raw: camera
+    };
+  });
+}
+
+async function getCameraGroupMap(session) {
+  const groupsByCameraId = new Map();
+  const groupCandidates = [
+    "/cameraGroups?includeChildren=cameras,cameraGroups",
+    "/cameraGroups?includeChildren=true",
+    "/cameraGroups"
+  ];
+
+  for (const path of groupCandidates) {
+    try {
+      const response = await httpRequest("GET", joinUrl(session.apiRoot, path), {
+        headers: { authorization: `Bearer ${session.accessToken}` },
+        rejectUnauthorized: !session.allowInsecure,
+        timeout: 15000
+      });
+
+      if (response.status === 404) {
+        continue;
+      }
+      if (response.status < 200 || response.status >= 300) {
+        return { groupsByCameraId, status: `group lookup failed with HTTP ${response.status}` };
+      }
+
+      const groups = normalizeItems(response.data);
+      collectCameraGroups(groups, groupsByCameraId);
+      return { groupsByCameraId, status: "ok" };
+    } catch (error) {
+      return { groupsByCameraId, status: `group lookup failed: ${error.message}` };
+    }
+  }
+
+  return { groupsByCameraId, status: "cameraGroups endpoint not found" };
+}
+
+function collectCameraGroups(groups, groupsByCameraId) {
+  if (!Array.isArray(groups)) return;
+
+  for (const group of groups) {
+    const groupName = group.name || group.displayName || group.id || group.objectId || "Unnamed group";
+    const cameraRefs = [
+      ...asArray(group.cameras),
+      ...asArray(group.cameraItems),
+      ...asArray(group.members),
+      ...asArray(group.children).filter((child) => looksLikeCameraRef(child))
+    ];
+
+    for (const cameraRef of cameraRefs) {
+      const cameraId = extractObjectId(cameraRef);
+      if (!cameraId) continue;
+      if (!groupsByCameraId.has(cameraId)) groupsByCameraId.set(cameraId, []);
+      if (!groupsByCameraId.get(cameraId).includes(groupName)) {
+        groupsByCameraId.get(cameraId).push(groupName);
+      }
+    }
+
+    collectCameraGroups(asArray(group.cameraGroups), groupsByCameraId);
+    collectCameraGroups(asArray(group.groups), groupsByCameraId);
+    collectCameraGroups(asArray(group.children).filter((child) => !looksLikeCameraRef(child)), groupsByCameraId);
+  }
+}
+
+function summarizeCameraGroups(groups) {
+  if (!groups.length) return "0";
+  if (groups.length === 1) return groups[0];
+  return "various";
+}
+
+function asArray(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+function looksLikeCameraRef(value) {
+  if (!value || typeof value !== "object") return false;
+  const type = String(value.type || value.kind || value.objectType || value.resourceType || "").toLowerCase();
+  const url = String(value.url || value.href || value.path || value.id || "").toLowerCase();
+  return type.includes("camera") || url.includes("/cameras/");
+}
+
+function extractObjectId(value) {
+  if (!value) return "";
+  if (typeof value === "string") return extractIdFromPath(value);
+  const id = value.id || value.objectId || value.cameraId || value.path || value.url || value.href || "";
+  return extractIdFromPath(id);
+}
+
+function extractIdFromPath(value) {
+  const text = String(value || "");
+  const match = text.match(/\/cameras\/([^/?#]+)/i);
+  return match ? decodeURIComponent(match[1]) : text;
 }
 
 function stringifyShort(value) {

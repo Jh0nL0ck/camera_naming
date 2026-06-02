@@ -123,26 +123,34 @@ els.form.addEventListener("submit", async (event) => {
       body: JSON.stringify(formPayload())
     });
     state.sessionId = data.sessionId;
-    setStatus(`Connected. Token valid for ${data.expiresIn || "?"} seconds.`, "ok");
+    setStatus(`Connected. Token valid for ${data.expiresIn || "?"} seconds. Loading cameras...`, "ok");
     setRouteInfo(`IDP: ${data.tokenEndpoint} | API: ${data.apiRoot}`);
+    await loadCameras();
   } catch (error) {
     showError(error);
   }
 });
 
-els.loadCameras.addEventListener("click", async () => {
+els.loadCameras.addEventListener("click", loadCameras);
+
+async function loadCameras() {
   try {
     setStatus("Reading cameras...");
     const data = await api("/api/cameras");
     state.cameras = data.cameras || [];
     state.selected.clear();
     state.preview.clear();
+    state.validation.clear();
+    state.validationLevel = "";
+    els.confirmApply.checked = false;
     render();
-    setStatus(`${state.cameras.length} cameras loaded.`, "ok");
+    const groupStatus = state.cameras.find((camera) => camera.groupLookupStatus)?.groupLookupStatus || "ok";
+    const suffix = groupStatus === "ok" ? "" : ` Group data: ${groupStatus}.`;
+    setStatus(`${state.cameras.length} cameras loaded.${suffix}`, groupStatus === "ok" ? "ok" : "");
   } catch (error) {
     showError(error);
   }
-});
+}
 
 els.filter.addEventListener("input", render);
 els.pattern.addEventListener("input", () => {
@@ -446,7 +454,7 @@ function visibleCameras() {
 function render() {
   const rows = visibleCameras();
   if (!rows.length) {
-    els.cameraRows.innerHTML = `<tr><td class="empty" colspan="5">No cameras to display.</td></tr>`;
+    els.cameraRows.innerHTML = `<tr><td class="empty" colspan="6">No cameras to display.</td></tr>`;
     updateSelection();
     return;
   }
@@ -464,6 +472,7 @@ function render() {
           <td><input type="checkbox" data-id="${escapeHtml(camera.id)}" ${checked}></td>
           <td>${escapeHtml(camera.name || "(unnamed)")}</td>
           <td class="new-name">${escapeHtml(newName)}</td>
+          <td>${escapeHtml(camera.group || "0")}</td>
           <td class="id">${escapeHtml(camera.id)}</td>
           <td>${escapeHtml(enabled)}</td>
         </tr>
