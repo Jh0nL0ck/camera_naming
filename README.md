@@ -1,4 +1,4 @@
-# XProtect Camera Renamer
+# Camera Renamer
 
 Local Node tool for bulk renaming Milestone XProtect cameras through the XProtect API Gateway.
 
