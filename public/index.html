@@ -55,19 +55,7 @@
 
       <section class="workspace">
         <aside class="panel tools">
-          <h2>Naming</h2>
-          <label>
-            Pattern
-            <input id="pattern" value="{prefix}-{index:000}" placeholder="{prefix}-{index:000}">
-          </label>
-          <label>
-            Prefix
-            <input id="prefix" value="CAM">
-          </label>
-          <label>
-            Start index
-            <input id="startIndex" type="number" value="1" min="0">
-          </label>
+          <h2>Cameras</h2>
           <label>
             Filter
             <input id="filter" placeholder="Search by name or ID">
@@ -76,10 +64,6 @@
             <button id="loadCameras" type="button">Load cameras</button>
             <button id="selectVisible" type="button">Select visible</button>
             <button id="clearSelection" type="button">Clear selection</button>
-            <button id="preview" type="button">Preview</button>
-          </div>
-          <div class="legend">
-            Variables: <code>{site}</code>, <code>{building}</code>, <code>{floor}</code>, <code>{zone}</code>, <code>{prefix}</code>, <code>{index}</code>
           </div>
         </aside>
 
@@ -161,10 +145,23 @@
               </div>
             </div>
             <div class="preview-editor">
-              <label>
-                Pattern
-                <textarea id="widePattern" rows="3" spellcheck="false">{prefix}-{index:000}</textarea>
-              </label>
+              <div class="pattern-stack">
+                <label>
+                  Pattern
+                  <textarea id="widePattern" rows="3" spellcheck="false">{prefix}-{index:000}</textarea>
+                </label>
+                <input id="pattern" type="hidden" value="{prefix}-{index:000}">
+                <div class="pattern-fields">
+                  <label>
+                    Prefix
+                    <input id="prefix" value="CAM">
+                  </label>
+                  <label>
+                    Start index
+                    <input id="startIndex" type="number" value="1" min="0">
+                  </label>
+                </div>
+              </div>
               <div class="sample-grid">
                 <label>
                   Site
@@ -198,6 +195,9 @@
             </div>
             <div id="widePreview" class="wide-preview"></div>
             <div id="validationSummary" class="validation-summary">No previewed changes yet.</div>
+            <div class="preview-actions">
+              <button id="preview" type="button">Preview selected cameras</button>
+            </div>
           </section>
         </section>
       </section>

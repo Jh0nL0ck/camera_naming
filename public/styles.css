@@ -342,6 +342,17 @@ td.new-name {
   gap: 14px;
 }
 
+.pattern-stack {
+  display: grid;
+  gap: 10px;
+}
+
+.pattern-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(120px, 180px);
+  gap: 10px;
+}
+
 .sample-grid {
   display: grid;
   gap: 10px;
@@ -396,6 +407,16 @@ td.new-name {
   background: var(--soft-bad);
 }
 
+.preview-actions {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.preview-actions button {
+  min-width: 220px;
+}
+
 tr.row-error td {
   background: var(--soft-bad);
 }
@@ -435,7 +456,16 @@ tr.row-warning td {
   }
 
   .builder-grid,
-  .sample-grid {
+  .sample-grid,
+  .pattern-fields {
     grid-template-columns: 1fr;
+  }
+
+  .preview-actions {
+    justify-content: stretch;
+  }
+
+  .preview-actions button {
+    width: 100%;
   }
 }
