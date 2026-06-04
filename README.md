@@ -1,3 +1,5 @@
+# Quick disclaimer: this tool is an independent open source project I’m building myself. It is not affiliated with, endorsed by, sponsored by, or supported by Milestone Systems. XProtect™ and Milestone™ are trademarks of Milestone Systems A/S.
+
 # Camera Renamer
 
 Local Node tool for bulk renaming Milestone XProtect cameras through the XProtect API Gateway.
